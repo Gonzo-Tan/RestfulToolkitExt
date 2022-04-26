@@ -6,6 +6,7 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiMethod;
 import jiux.net.plugin.restful.common.resolver.JaxrsResolver;
+import jiux.net.plugin.restful.common.resolver.RestServerResolver;
 import jiux.net.plugin.restful.common.resolver.ServiceResolver;
 import jiux.net.plugin.restful.common.resolver.SpringResolver;
 import jiux.net.plugin.restful.navigation.action.RestServiceItem;
@@ -45,7 +46,8 @@ public class ServiceHelper {
 
         SpringResolver springResolver = new SpringResolver(module);
         JaxrsResolver jaxrsResolver = new JaxrsResolver(module);
-        ServiceResolver[] resolvers = {springResolver, jaxrsResolver};
+        RestServerResolver restServerResolver = new RestServerResolver(module);
+        ServiceResolver[] resolvers = {springResolver, jaxrsResolver, restServerResolver};
 
         for (ServiceResolver resolver : resolvers) {
             List<RestServiceItem> allSupportedServiceItemsInModule = resolver.findAllSupportedServiceItemsInModule();
@@ -62,6 +64,7 @@ public class ServiceHelper {
 
         SpringResolver springResolver = new SpringResolver(project);
         JaxrsResolver jaxrsResolver = new JaxrsResolver(project);
+        RestServerResolver restServerResolver = new RestServerResolver(project);
 
         Module[] modules = ModuleManager.getInstance(project).getModules();
 
@@ -72,7 +75,7 @@ public class ServiceHelper {
             }
         } else {
 
-            ServiceResolver[] resolvers = {springResolver, jaxrsResolver};
+            ServiceResolver[] resolvers = {springResolver, jaxrsResolver, restServerResolver};
             for (ServiceResolver resolver : resolvers) {
                 List<RestServiceItem> allSupportedServiceItemsInProject = resolver.findAllSupportedServiceItemsInProject();
 

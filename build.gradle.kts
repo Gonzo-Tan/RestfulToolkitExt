@@ -23,6 +23,7 @@ version = properties("pluginVersion")
 repositories {
     mavenLocal()
     mavenCentral()
+    maven(url = {"https://packages.jetbrains.team/maven/p/ij/intellij-dependencies"})
 }
 
 dependencies {
@@ -39,9 +40,9 @@ intellij {
     type.set(properties("platformType"))
     downloadSources.set(properties("platformDownloadSources").toBoolean())
     updateSinceUntilBuild.set(true)
-
     // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    localPath.set("/Users/gonzo/Downloads/ideaIU-2020.3.4")
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -58,6 +59,7 @@ qodana {
     showReport.set(System.getenv("QODANA_SHOW_REPORT").toBoolean())
 }
 
+
 tasks {
     // Set the JVM compatibility versions
     properties("javaVersion").let {
@@ -68,7 +70,11 @@ tasks {
         withType<KotlinCompile> {
             kotlinOptions.jvmTarget = it
         }
+        withType<Copy> {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
     }
+
 
     wrapper {
         gradleVersion = properties("gradleVersion")
@@ -127,4 +133,12 @@ tasks {
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
     }
+}
+
+gradle.taskGraph.whenReady {
+    allTasks
+        .filter { it.hasProperty("duplicatesStrategy") } // Because it's some weird decorated wrapper that I can't cast.
+        .forEach {
+            it.setProperty("duplicatesStrategy", "EXCLUDE")
+        }
 }
