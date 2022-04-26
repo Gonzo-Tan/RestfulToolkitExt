@@ -32,7 +32,7 @@ public class RestServicesNavigator extends AbstractProjectComponent
         implements PersistentStateComponent<RestServicesNavigatorState>, ProjectComponent {
     public static final Logger LOG = Logger.getInstance(RestServicesNavigator.class);
 
-    public static final String TOOL_WINDOW_ID = "RestServices";
+    public static final String TOOL_WINDOW_ID = "EsignRestServices";
     private static final URL SYNC_ICON_URL = RestServicesNavigator.class.getResource("/actions/refresh.png");
     protected final Project myProject;
     //    private JTree myTree;

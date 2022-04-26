@@ -1,8 +1,8 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>jiux.net.plugin.restful.toolkit</id>
-    <name>RestfulToolkitX</name>
-    <vendor email="huangbaihua@vip.qq.com" url="https://github.com/huangbaihua001/RestfulToolkitX/issues">jiux.net</vendor>
+    <name>EsignRestfulToolkit</name>
+    <vendor email="huangbaihua@vip.qq.com" url="https://github.com/huangbaihua001/RestfulToolkitX/issues">jiux.net,qiling</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
