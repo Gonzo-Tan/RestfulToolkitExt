@@ -12,11 +12,27 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.SystemInfoRt;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.Map;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import jiux.net.plugin.restful.common.RequestHelper;
 import jiux.net.plugin.utils.JsonUtils;
 import jiux.net.plugin.utils.ToolkitUtil;
@@ -26,18 +42,9 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
-import java.util.Map;
-
 
 public class RestServiceDetail extends JBPanel {
+
     private static RestServiceDetail restServiceDetail;
     public JTextField urlField;
     public JPanel urlPanel;
@@ -45,6 +52,7 @@ public class RestServiceDetail extends JBPanel {
     public JButton sendButton;
     public JTabbedPane requestTabbedPane;
 
+    public RSyntaxTextArea requestHeaderTextArea;
     public RSyntaxTextArea requestParamsTextArea;
     public RSyntaxTextArea requestBodyTextArea;
     public RSyntaxTextArea responseTextArea;
@@ -89,31 +97,32 @@ public class RestServiceDetail extends JBPanel {
         urlPanel.setLayout(mgr);
 
         urlPanel.add(methodField,
-                new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_BOTH,
-                        GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED,
-                        null, null, null));
+            new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED,
+                null, null, null));
         urlPanel.add(urlField,
-                new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_BOTH,
-                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-                        null, null, null));
+            new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                null, null, null));
         urlPanel.add(sendButton,
-                new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_BOTH,
-                        GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED,
-                        null, null, null));
+            new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED,
+                null, null, null));
 
         this.setBorder(BorderFactory.createEmptyBorder());
         this.setLayout(new GridLayoutManager(2, 1));
 
         this.add(urlPanel,
-                new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
-                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
-                        null, null, null));
+            new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_FIXED,
+                null, null, null));
         this.add(requestTabbedPane,
-                new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
-                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-                        null, null, null));
+            new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                null, null, null));
     }
 
     private void bindSendButtonActionListener() {
@@ -122,47 +131,56 @@ public class RestServiceDetail extends JBPanel {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
                     final Runnable runnable = () -> {
-                        String url = urlField.getText();
+                        try {
+                            String url = urlField.getText();
+                            Map<String, String> headerMap = null;
+                            if (requestParamsTextArea != null) {
+                                String requestParamsText = requestParamsTextArea.getText();
+                                Map<String, String> paramMap = ToolkitUtil.textToParamMap(requestParamsText);
+                                if (paramMap.size() > 0) {
+                                    // set PathVariable value to request URI
+                                    for (String key : paramMap.keySet()) {
+                                        url = url.replaceFirst("\\{(" + key + "[\\s\\S]*?)}", paramMap.get(key));
+                                    }
+                                }
 
-                        if (requestParamsTextArea != null) {
-                            String requestParamsText = requestParamsTextArea.getText();
-                            Map<String, String> paramMap = ToolkitUtil.textToParamMap(requestParamsText);
-                            if (paramMap.size() > 0) {
-                                // set PathVariable value to request URI
-                                for (String key : paramMap.keySet()) {
-                                    url = url.replaceFirst("\\{(" + key + "[\\s\\S]*?)}", paramMap.get(key));
+                                String params = ToolkitUtil.textToRequestParam(requestParamsText);
+                                if (params.length() != 0) {
+                                    if (url.contains("?")) {
+                                        url += "&" + params;
+                                    } else {
+                                        url += "?" + params;
+                                    }
                                 }
                             }
 
-                            String params = ToolkitUtil.textToRequestParam(requestParamsText);
-                            if (params.length() != 0) {
-                                if (url.contains("?")) {
-                                    url += "&" + params;
-                                } else {
-                                    url += "?" + params;
+                            if (requestHeaderTextArea != null) {
+                                String requestHeaderText = requestHeaderTextArea.getText();
+                                headerMap = ToolkitUtil.textToHeaderMap(requestHeaderText);
+                            }
+
+                            String method = methodField.getText();
+                            String responseText = url;
+                            //NOTICE: Send Request.
+                            String response = null;
+                            if (requestBodyTextArea != null && StringUtils.isNotBlank(requestBodyTextArea.getText())) {
+                                response = RequestHelper.postRequestBodyWithJson(url, requestBodyTextArea.getText(),
+                                    headerMap);
+                            } else {
+                                try {
+                                    response = RequestHelper.request(url, method, headerMap);
+                                } catch (ClientProtocolException ex) {
+                                    ex.printStackTrace();
                                 }
                             }
-                        }
-
-
-                        String method = methodField.getText();
-                        String responseText = url;
-
-                        String response = null;
-                        if (requestBodyTextArea != null && StringUtils.isNotBlank(requestBodyTextArea.getText())) {
-                            response = RequestHelper.postRequestBodyWithJson(url, requestBodyTextArea.getText());
-                        } else {
-                            try {
-                                response = RequestHelper.request(url, method);
-                            } catch (ClientProtocolException ex) {
-                                ex.printStackTrace();
+                            if (response != null) {
+                                responseText = response;
                             }
+                            addResponseTabPanel(responseText);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            System.err.println("Send Request Error " + e.getMessage());
                         }
-                        if (response != null) {
-                            responseText = response;
-                        }
-                        System.err.println(responseText);
-                        addResponseTabPanel(responseText);
                     };
                     runnable.run();
                 }
@@ -175,7 +193,6 @@ public class RestServiceDetail extends JBPanel {
         requestTabbedPane.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println(e.getClickCount());
                 super.mouseClicked(e);
             }
 
@@ -209,6 +226,14 @@ public class RestServiceDetail extends JBPanel {
 
 
     public void addRequestParamsTab(String requestParams) {
+        if (requestHeaderTextArea == null) {
+            requestHeaderTextArea = createTextArea("key:value", SyntaxConstants.SYNTAX_STYLE_NONE);
+        } else {
+            requestHeaderTextArea.setText("key:value");
+        }
+
+        addHeaderTabbedPane("Headers", requestHeaderTextArea);
+
         StringBuilder paramBuilder = new StringBuilder();
 
         if (StringUtils.isNotBlank(requestParams)) {
@@ -221,14 +246,14 @@ public class RestServiceDetail extends JBPanel {
                 paramBuilder.append(param).append(" : ").append(value).append("\n");
             }
         }
-
         if (requestParamsTextArea == null) {
             requestParamsTextArea = createTextArea(paramBuilder.toString(), SyntaxConstants.SYNTAX_STYLE_NONE);
         } else {
             requestParamsTextArea.setText(paramBuilder.toString());
         }
-
         addRequestTabbedPane("RequestParams", requestParamsTextArea);
+
+
     }
 
     public void addRequestBodyTabPanel(String text) {
@@ -242,9 +267,18 @@ public class RestServiceDetail extends JBPanel {
     }
 
 
+    public void addHeaderTabbedPane(String title, JTextArea jTextArea) {
+        JScrollPane jbScrollPane = new JBScrollPane(jTextArea, JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        jTextArea.addKeyListener(new TextAreaKeyAdapter(jTextArea));
+
+        requestTabbedPane.addTab(title, jbScrollPane);
+        requestTabbedPane.setSelectedComponent(jbScrollPane);
+    }
+
     public void addRequestTabbedPane(String title, JTextArea jTextArea) {
         JScrollPane jbScrollPane = new JBScrollPane(jTextArea, JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jTextArea.addKeyListener(new TextAreaKeyAdapter(jTextArea));
 
         requestTabbedPane.addTab(title, jbScrollPane);
@@ -253,10 +287,10 @@ public class RestServiceDetail extends JBPanel {
 
 
     public void addResponseTabPanel(String text) {
-        //FIXME RSyntaxTextArea 中文乱码
+
         String responseTabTitle = "Response";
         if (responseTextArea == null) {
-            responseTextArea = createTextArea(text, SyntaxConstants.SYNTAX_STYLE_JSON);
+            responseTextArea = createTextArea(text, SyntaxConstants.SYNTAX_STYLE_NONE);
             addRequestTabbedPane(responseTabTitle, responseTextArea);
         } else {
             Component componentAt = null;
@@ -278,15 +312,14 @@ public class RestServiceDetail extends JBPanel {
 
     @NotNull
     public RSyntaxTextArea createTextArea(String text, String style) {
-        Font font = getTextAreaFont();
-
+        //FIXME RSyntaxTextArea 中文乱码
         RSyntaxTextArea jTextArea = new RSyntaxTextArea(text);
-        jTextArea.setFont(font);
-        jTextArea.setCurrentLineHighlightColor(JBColor.LIGHT_GRAY);
         jTextArea.setSyntaxEditingStyle(style);
         jTextArea.setCodeFoldingEnabled(true);
+
         jTextArea.setBackground(getBackground());
         jTextArea.setForeground(getForeground());
+        jTextArea.setHighlightCurrentLine(false);
 
         jTextArea.addKeyListener(new KeyAdapter() {
             @Override
@@ -353,6 +386,7 @@ public class RestServiceDetail extends JBPanel {
         resetTextComponent(requestParamsTextArea);
         resetTextComponent(requestBodyTextArea);
         resetTextComponent(responseTextArea);
+        resetTextComponent(requestHeaderTextArea);
     }
 
     private void resetTextComponent(JTextArea textComponent) {
@@ -370,6 +404,7 @@ public class RestServiceDetail extends JBPanel {
     }
 
     private class TextAreaKeyAdapter extends KeyAdapter {
+
         private final JTextArea jTextArea;
 
         public TextAreaKeyAdapter(JTextArea jTextArea) {
@@ -380,7 +415,7 @@ public class RestServiceDetail extends JBPanel {
         public void keyPressed(KeyEvent event) {
             super.keyPressed(event);
             if ((event.getKeyCode() == KeyEvent.VK_ENTER)
-                    && (event.isControlDown() || event.isMetaDown())) {
+                && (event.isControlDown() || event.isMetaDown())) {
                 String oldValue = jTextArea.getText();
                 if (!JsonUtils.isValidJson(oldValue)) {
                     return;

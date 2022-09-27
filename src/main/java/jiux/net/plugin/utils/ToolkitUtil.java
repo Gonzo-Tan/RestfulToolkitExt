@@ -10,6 +10,9 @@ import com.intellij.openapi.startup.StartupManager;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.DisposeAwareRunnable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
@@ -127,7 +130,14 @@ public class ToolkitUtil {
         Map<String, String> paramMap = textToParamMap(text);
 
         if (paramMap.size() > 0) {
-            paramMap.forEach((s, o) -> param.append(s).append("=").append(o).append("&"));
+            paramMap.forEach((s, o) -> {
+                try {
+                    param.append(s).append("=")
+                        .append(URLEncoder.encode(o, "UTF-8")).append("&");
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         return param.length() == 0 ? "" : param.deleteCharAt(param.length() - 1).toString();
@@ -155,5 +165,26 @@ public class ToolkitUtil {
         return paramMap;
     }
 
+
+    @NotNull
+    public static Map<String, String> textToHeaderMap(String text) {
+        Map<String, String> paramMap = new HashMap<>();
+        String paramText = text;
+        String[] lines = paramText.split("\n");
+
+        for (String line : lines) {
+            if (!line.startsWith("//") && line.contains(":")) {
+
+                String[] prop = line.split(":");
+
+                if (prop.length > 1) {
+                    String key = prop[0].trim();
+                    String value = prop[1].trim();
+                    paramMap.put(key, value);
+                }
+            }
+        }
+        return paramMap;
+    }
 
 }

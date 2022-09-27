@@ -3,6 +3,32 @@
 # RestfulToolkitX Changelog
 ## [Unreleased]
 
+## [2.0.7] - 2022-09-25
+### Fixed
+- 跳过HTTPS验证 [#issue 50](https://github.com/huangbaihua001/RestfulToolkitX/issues/50)
+- Skip HTTPS Authentication [#issue 50](https://github.com/huangbaihua001/RestfulToolkitX/issues/50)
+
+## [2.0.6] - 2022-08-02
+### Added
+- 兼容 IDEA 2022.2 (222)
+- Compatible with IDEA 2022.2 (222)
+
+
+## [2.0.5] - 2022-06-11
+### Added
+- 支持泛型参数 [#28](https://github.com/huangbaihua001/RestfulToolkitX/issues/28)
+- Supports generic parameters [#28](https://github.com/huangbaihua001/RestfulToolkitX/issues/28)
+
+## [2.0.4] - 2022-06-10
+### Fixed
+- Fixed: https://github.com/huangbaihua001/RestfulToolkitX/issues/36
+
+
+## [2.0.3] - 2022-06-02
+### Fixed
+- Fixed: https://github.com/huangbaihua001/RestfulToolkitX/issues/27
+- Fixed: https://github.com/huangbaihua001/RestfulToolkitX/issues/29
+
 ## [2.0.2] - 2022-04-16
 ### Fixed
 - Fixed: https://github.com/huangbaihua001/RestfulToolkitX/issues/15

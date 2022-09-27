@@ -1,8 +1,9 @@
 # Restful Toolkit For IntelliJ IDEA
 
 ![Build](https://github.com/huangbaihua001/RestfulToolkitX/workflows/Build/badge.svg)
+![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/jiux.net.plugin.restful.toolkit.svg)](https://plugins.jetbrains.com/plugin/18118-restfultoolkitx)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/jiux.net.plugin.restful.toolkit.svg)](https://plugins.jetbrains.com/plugin/jiux.net.plugin.restful.toolkit)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/jiux.net.plugin.restful.toolkit.svg)](https://plugins.jetbrains.com/plugin/18118-restfultoolkitx)
 
 [中文](README_zh_CN.md)
 
@@ -24,7 +25,7 @@ This branch will continue to be compatible with the latest version of IDEA, and 
 - [x] A simple http request tool.
 - [x] Generate&Copy Query Param, Generate&Copy URL on the request method.
 - [x] Convert java class to JSON; format json data <em>( Windows: Ctrl + Enter; Mac: Command + Enter ) .
-- [x] [Code generator](codeGen.md).
+- [x] [Code generator](codeGen.md). Based on [EasyCode]
 
 Generate Code Preview
 ![code_gen_preview.png](img/code_gen_preview_1.gif)
@@ -69,3 +70,5 @@ Plugin based on the [IntelliJ Platform Plugin Template][template]
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
 
 [RestfulToolkit]: https://github.com/mrmanzhaow/RestfulToolkit
+
+[EasyCode]: https://github.com/makejavas/EasyCode
